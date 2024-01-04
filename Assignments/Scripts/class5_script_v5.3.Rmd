@@ -1,0 +1,360 @@
+---
+title: "Class 5 script"
+output: html_document
+---
+```{r}
+
+```
+
+```{r setup, include=FALSE}
+# Load libraries
+library(tidyverse)
+library(rpart)
+library(rpart.plot)
+```
+
+## Agenda
+
+1. Review portions of the last project.
+
+2. Prepare for module 5 project.  I hope you have noticed that the code in the webinar can be adapted pretty directly for the project!
+
+Avoid frustration! If you hit an obstacle in the project (which is making you feel like hitting something), please get in touch with us!
+
+## Tips for compiling/knitting your RMarkdown document
+
+The project for this module, like the last module, includes a file upload. You must knit the RMarkdown document in which you did your work.  
+
+Key concept:  RMarkdown will only use the information in your code chunks as it compiles! This can create problems if you don't have all the info the document needs in the chunks! 
+
+Solution: 
+
+    1. Clear your environment.
+    2. Run each chunk in sequence looking for errors.
+    3. Fix errors.
+    4. Repeat 1 and 2. Now if there are no errors you should be good to go.
+    5. Compile.
+    6. Submit the automatically generated word or HTML file (find it in your working directory) for the file upload assignment.
+
+## Data prep for AdviseInvest
+
+Here is the data prep code chunk that is included in the template.  Use this exactly! The same code will also be available in the template for the Module 5 project.
+
+```{r, }
+advise_invest <- read_csv("adviseinvest.csv")  %>%            # Download data
+  select(-product) %>%                                        # Remove the product column
+  na.omit %>%                                                 # Remove NAs
+  filter(income > 0,                                          # Filter out mistaken data
+         num_accts < 5) %>% 
+  mutate(answered = factor(ifelse(answered==0, "no","yes"),   # Turn answered into yes/no factor
+                           levels  = c("no", "yes")),
+         female = factor(female),                             # Make categorical variables into factors
+         job = factor(job),
+         rent = factor(rent),
+         own_res = factor(own_res),
+         new_car = factor(new_car),
+         mobile = factor(mobile),
+         chk_acct = factor(chk_acct),
+         sav_acct = factor(sav_acct)) 
+
+glimpse(advise_invest)
+
+summary(advise_invest)
+```
+
+Here is the tree you fit in the previous project:
+
+```{r}
+(tree_model <- rpart(answered ~ ., 
+                     data = advise_invest,
+                     maxdepth = 5,
+                     minbucket = 10))
+
+# Note that the outside parentheses in this code tell R to print the result.
+```
+
+Complicated! Let's practice reading the information from the first split in this tree. Remember that the legend at the top of the output really assist in decoding this information.
+
+1) root 29499 13375 yes (0.4534052 0.5465948)  
+
+The first node is the root node, consisting in the data before any splits. Here we can see that there are 29499 observations, the majority class is "yes" (yval), and that after predicting "yes" (as the majority class), we would be wrong in 13375 cases (loss). The levels in `answered` have a sequence of "no" then "yes" (defined above when we factored the variable); the default in the algorithm is to model the second level, so we are modeling "yes."  Which level we are modeling doesn't change the tree or its predictive properties, just its interpretation. In the root node, 55% of the data is "yes," the majority class, and 45% is "no.) That is the information in parentheses: (0.4534052 0.5465948).
+
+2) chk_acct=0,1,2 19199  8000 no (0.5833116 0.4166884) 
+3) chk_acct=3 10300  2176 yes (0.2112621 0.7887379) 
+
+The first split is on checking account where categories are 0, 1, or 2, on the one hand, or 3, on the other.  Neither of these are terminal nodes, meaning that they do not produce customer segments; there will be additional splits before we get to final segments with predicted labels.  Focusing on 2):  19199 observations wound up in this node, 8000 of which were incorrectly classified. The majority class is "no" at 58%. 
+
+4) income>=79840 1728   192 no (0.8888889 0.1111111) *
+5) income< 79840 17471  7808 no (0.5530880 0.4469120) 
+
+4) is the first terminal node, resulting in a customer segment. It depends on the prior split. So, for customers with checking accounts equal to 0, 1, or 2 AND income greater than or equal to 79840, then predicted label is "no" because that is the majority class in the node, at 89%. 1728 customers wound up in the segment, and predicting no for those customers would have resulted in 192 incorrect classifications.
+
+Etc.
+
+Here is the plot:
+
+```{r}
+rpart.plot(tree_model)
+```
+
+Hard to read!  Play around with the tweak argument:
+
+```{r}
+rpart.plot(tree_model, tweak = 1.2)
+```
+Too busy! There is overplotting.
+
+```{r}
+rpart.plot(tree_model, tweak = 1.4, roundint=T)
+```
+
+Just right.  Different computer systems will require different size adjustments, it seems.
+
+In a classification tree the predictors that are most strongly associated with the target occur closest to the root, that is, near the top of the tree. This information is useful for descriptive purposes, for example to help a business understand their customers. 
+
+The top three predictors of answering in this model are: number of checking accounts, income, and mobile. (This was somewhat ambiguous: you may have answered income greater than or less than 79840 and income greater than or less than 38910.  That would be fine.)
+
+Here is how to use this model to predict a class label for each customer:
+
+```{r}
+predict(tree_model, type = "class") %>% 
+  head
+```
+This means that the model predicts customer 1 will answer, customer 2 will answer, etc. The `predict()` function simply runs each customer through the classification tree to find out which terminal node they wind up in.
+
+The argument `type = "class"` mean that the `predict()` function will predict a class label. But we could also predict a probability by changing `type = "class"` to `type = "prob"`.
+
+
+```{r}
+predict(tree_model, type = "prob") %>% 
+  head
+```
+
+This may sound complicated, but all the probability represents is the proportion of each class in the terminal node in which that customer wound up. So, for example, the first customer wound up in a terminal node that was 88% "yes."  The majority class in that case would be "yes," but you can see how a probability provides more information than simply a binary class label. 
+
+Accuracy of the tree model can be calculated using `predict()`. Accuracy is simply the proportion of correct predictions. Accuracy can be calculated in this case because we are predicting something we already know, which allows us to compare the prediction with the observed truth.
+
+```{r}
+predict(tree_model, type = "class") == advise_invest$answered 
+
+```
+
+This produces TRUEs and FALSEs, as you can see.  `mean()` will calculate the proportion of TRUEs.
+
+```{r}
+(predict(tree_model, type = "class") == advise_invest$answered) %>% 
+  mean
+
+```
+
+## Example Code for Project
+
+What do you need to know for this module's project?
+
+1. Fit a tree model using all the available predictors. 
+2. Create a confusion matrix using predict() with the `type = "class"` argument and identify numbers of TP, FP, TN and FN.
+3. Estimate profit (benefits - costs) using a defined cost-benefit matrix and the above confusion matrix.
+4. Estimate profit for a strategy that consists in calling everyone.
+5. Estimate profit for a class decision threshold of .3 using predict() with the `type = "prob"` argument.
+6.  Use the model to predict on a new dataset (without the target), then use these predictions to identify those who should be called--a contact list.
+7.  Make a recommendation to the Director of Sales based on your analytic work.
+
+Note:  For the module 5 project you will predict answering for prospective customers (who have not yet been called). Consequently, the assignment requires an additional dataset, customer_data.csv, that you will need to download and move into your project folder.  Here is code to load that data into memory after you have it saved in your project folder (your working directory). This code is included in the template script.
+
+We will again use the MegaTelCo data for this demonstration.
+
+```{r}
+# Load and clean data--recycle code from last project demo
+
+m <- read_csv(file = "megatelco_v5.0.csv")
+
+m_clean <- m %>% 
+  mutate(reported_satisfaction = factor(reported_satisfaction,
+                                        levels = c("low","avg", "high"),
+                                        ordered = T),
+         reported_usage_level = factor(reported_usage_level,
+                                       levels = c("low", "avg", "high"),
+                                       ordered = T),
+         considering_change_of_plan = factor(considering_change_of_plan,
+                                             levels = c("no", "maybe", "yes")),
+         leave = factor(leave), # let the levels be assigned alphabetically
+         college = ifelse(college=="one", "yes", "no"),
+         college = factor(college)) %>% 
+  filter(income > 0,
+         house > 0,
+         handset_price < 1500) %>% 
+  select(-id) %>% 
+  na.omit 
+
+# Check whether the operation was successful
+summary(m_clean)
+
+```
+
+### Fit a classification tree and create a confusion matrix 
+
+Fit a tree model and summarize the results in a confusion matrix using the default class decision threshold produced by using the `type = `class"` argument to `predict()`.  Report the counts in the cells.
+
+```{r}
+(classification_tree <- rpart(leave ~., 
+                              data = m_clean,
+                              maxdepth = 5,
+                              minbucket = 10))
+
+table(predicted = predict(classification_tree, type = "class"),
+      observed = m_clean$leave)
+
+rpart.plot(x = classification_tree)
+
+```
+
+In the MegaTelCo case our objective is to model leave. Correctly predicting leave is therefore a true positive, represented in the upper left cell in the matrix.  Incorrectly predicting leave---we predict leave but the customer stays---is a false positive, in the upper right cell. Typically, in a case like this one we would only consider predictions of leave to be actionable. That is because if a customer is predicted to stay then, logically, no intervention is necessary. We will therefore ignore the second row in this confusion matrix.
+
+### Calculate profit I
+
+Using the confusion matrix in the previous question how much profit (revenue - costs) could be expected with these costs-benefits?
+
+For MegaTelCo we will assume benefit = 800 and cost = 200.  TPs are a benefit, FPs are a cost. Again, we ignore those predicted to stay. (The cost-benefit numbers will be different in the AdviseInvest case! )
+
+Why are TPs a benefit? In the MegaTelCo scenario, these are customers who are predicted to leave and actually were going to leave. If your marketing campaign is successful, then you can convince them to stay, thereby saving the company money. (In the AdviseInvest scenario, TPs are customers that you have predicted will answer the phone and do answer, thus providing an opportunity for your sales reps to make a sale.)
+
+
+```{r}
+table(predicted = predict(classification_tree, type = "class"),
+      observed = m_clean$leave)
+
+```
+
+```{r}
+
+6999 * (800 - 200) - 4579 * 200
+
+```
+
+### Calculate profit II
+
+How much profit (revenue - costs) could be expected if all customers got the marketing incentive? This is equivalent to always predicting leave, so:
+
+```{r}
+
+m_clean %>% 
+  count(leave)
+
+```
+
+TPs will be the leavers, FPs the stayers.
+
+```{r}
+
+7470 * (800 - 200) - 7521 * 200
+
+```
+ 
+### Calculate profit III
+
+What if we shifted the class decision threshold down to .2?  What happens to profit?
+
+Here are the steps involved in doing that analysis:
+
+1. predict probabilities
+
+```{r}
+
+predict(classification_tree, type = "prob") %>% 
+  head
+
+```
+
+Pick out just the first column using square bracket notation: [row, column]. This is an alternative to dollar sign notation.  [ , column] is the same as $column.
+
+```{r}
+predict(classification_tree, type = "prob")[ ,1] %>%  # picks out the first column
+  head
+```
+
+2. Convert probabilities to a class label at a given decision threshold.
+
+```{r}
+ifelse(predict(classification_tree, type = "prob")[ ,1] >= .2, "LEAVE", "STAY")
+
+```
+
+3. Create a confusion matrix using that decision threshold. 
+
+```{r}
+
+table(predicted = ifelse(predict(classification_tree, type = "prob")[ ,1] >= .2, "LEAVE", "STAY"),
+      observed = m_clean$leave)
+
+
+```
+
+4. Calculate profit.
+
+```{r}
+
+7470 * (800 - 200) - 5394 *200
+
+```
+
+### Predict for new data and create a customer contact list
+
+Predict the probability of answering for new customers, then filter the list at the optimal class decision threshold, .2. (Why .2?  In an actual analysis this would be one of the calculations you would need to do. Here this optimal decision threshold is provided for you.)
+
+Key idea: The distinction between modeling and using the model. 
+
+So far in the course we have been modeling. The presence of a target variable allows us to create a model that relates predictor variables to the target. In the case of a classification tree, the result is a set of rules that lead to a prediction for customers for whom the target variable has already been observed. But utlimately the reason for modeling is to create a model that can be used --- with new data!  Once we have a model then we are able to  predict either a class label or a probability for customers for whom the target variable has not been observed. For this we use the predict() function. It works just fine without a target variable in the input data set. 
+
+We will create a fake new dataset based on the original, just for illustration, with no target.  (Note: you would never do this in reality.  This code is just for illustration!!!)
+
+```{r}
+# For illustration, create new dataset, take out target, and add fake id.  As noted above,
+# this is not part of the module 5 project!! For the project this data is already supplied for you
+# in customer_data.csv.
+
+set.seed(123) # The seed guarantees we get exactly the same dataset after random;y subsetting
+new_customers <- m_clean %>% 
+  sample_n(1000) %>% 
+  select(-leave) %>%  
+  mutate(id = sample(1:1000, 1000, replace = F))
+
+glimpse(new_customers)
+
+```
+
+Get predictions for current customers:
+
+```{r}
+# generate predictions
+predict(object = classification_tree, 
+        newdata = new_customers, 
+        type = "prob")[ ,1] %>% 
+  head
+```
+
+Add prediction to the dataset and filter for probability >= .2. Select just id and prob for a contact list.
+
+```{r}
+
+contact_list <- new_customers %>% 
+  mutate(prob_churn = predict(classification_tree, 
+                              newdata = new_customers, 
+                              type = "prob")[,1]) %>% 
+  filter(prob_churn >= .2) %>% 
+  select(id, prob_churn) %>% 
+  arrange(desc(prob_churn))
+
+contact_list
+
+glimpse(contact_list)
+
+```
+
+##Here there are just 864 out of 1000 customers who should be contacted in order to optimize profit. 
+
+### Recommendation
+
+Make a recommendation based on the analytics you have done. This should be a carefully thought out, well-reasoned, and well-written recommendation in the neighborhood of 2 - 4 paragraphs.  Plus for using tables and plots!
+
+It is critical to think through exactly how the company will use the analytics you have produced. It is your responsibility as the analytics guru to tell them what to do.
+

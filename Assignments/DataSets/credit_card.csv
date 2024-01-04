@@ -1,0 +1,17 @@
+row,fico,income,card
+1,300,50,none
+2,310,55,none
+3,320,60,none
+4,330,65,none
+5,340,70,none
+6,350,75,none
+7,360,80,basic
+8,370,85,basic
+9,380,90,basic
+10,390,95,basic
+11,400,100,basic
+12,410,105,gold
+13,420,110,gold
+14,430,115,gold
+15,440,120,gold
+16,450,125,gold
