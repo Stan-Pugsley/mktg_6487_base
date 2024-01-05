@@ -1,0 +1,332 @@
+---
+title: "Class 4 script"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# Load libraries
+library(tidyverse)
+library(rpart)  # Install this:  install.packages("rpart")
+library(rpart.plot) # Install this:  install.packages("rpart.plot")
+```
+
+## Agenda
+
+1.  Review the last project assignment. Remember that it is fine to turn these assignments in late (there is a small penalty). The final deadline is the start of the next module's webinar.
+
+2.  Prepare for this module's modeling project.
+
+## RMarkdown
+
+Note that this is an RMarkdown document (file type .Rmd). You should use the .Rmd template for the module 4 project assignment. The way RMarkdown works is that the code goes in the gray "code chunks" and writing goes in between, with some formatting instructions. For example, headings and subheadings are indicated with hashtags.
+
+## Review Module 3 Project
+
+### Download data
+
+```{r}
+# download data
+a <- read.csv("adviseinvest.csv")
+
+summary(a)
+str(a)
+```
+
+Variables that represent *categories* (even if coded numerically) should be coded as factors.
+
+Variables that represent *counts* can be left as integers (or numeric data type). In some circumstances you might choose to represent a count as a factor, but in general such variables should be numeric.
+
+Variables that represent *measurements*  should be coded as numeric.
+
+To figure out which is which, check the data dictionary at Canvas. You can't just take variable encodings at face value!
+
+### Q3
+
+Cleaning/preparing the data:
+
+-   Remove the row with the single outlier in num_accts.
+-   Remove the rows with negative income values.
+-   Make 4 non-binary categorical variables into factors.
+
+```{r}
+a_clean <- a |>                    # Notice I am saving the clean data in a new object!
+  mutate(
+    job = factor(job),              # Allow R to assign default factor levels
+    product = factor(product),      
+    sav_acct = factor(sav_acct),
+    chk_acct = factor(chk_acct)
+    ) |> 
+  filter(
+    income > 0,                     # Filter out rows with mistaken values
+    num_accts < 5
+    ) 
+
+```
+
+Calculate and report the mean of `answered` and the mean of `income` after cleaning the data. Because `answered` is coded 0/1 this is as simple as calculating the proportion of 1s in that vector with `mean()`.
+
+```{r}
+# Mean of answered
+mean(a_clean$answered)
+
+# Mean of income
+mean(a_clean$income)
+
+```
+
+## Q4
+
+Recode `answered` (0/1) to be "no"/"yes." Then factor it. Also recode `mobile` and factor it.
+
+```{r}
+a_clean2 <- a_clean |>              # I am creating a new data object with the revised target
+  mutate(answered = ifelse(answered == 1, "yes", "no"),
+         answered = factor(answered),
+         mobile = ifelse(mobile == 1, "yes", "no"), # Make mobile into a factor
+        mobile = factor(mobile)) 
+```
+
+Plot `answered` against `income.` A *boxplot* is the default choice for plotting a categorical variable like answered against a continuous variable like income.
+
+```{r}
+a_clean2 |>                          # Notice I am not saving the plot but just displaying it
+  ggplot(mapping = aes(x = answered, y = income)) + 
+  geom_boxplot() +
+  labs(title = "answered ~ income")
+```
+
+**Need to interpret the plot!**
+
+Notice that a histogram displays the same information:
+
+```{r}
+a_clean2 |>                                  
+  ggplot(aes(y = income)) + 
+  geom_histogram() +
+  facet_wrap(~answered) +
+  labs(title = "Distribution of income by answered")
+```
+
+### Q5
+
+Plot "answered" against "mobile."
+
+Counts:
+
+```{r}
+a_clean2 |>  # Again, I'm not saving the plot here
+  count(mobile, answered) |>
+  ggplot(mapping = aes(x = mobile, y = n, fill = answered)) + 
+  geom_col(position = "dodge") +
+  labs(title = "Count of answered by mobile")
+```
+
+Proportions:
+
+```{r}
+a_clean2 |> 
+  count(mobile, answered) |>
+  group_by(mobile) |> 
+  mutate(proportion = n/sum(n)) |> 
+  ggplot(aes(mobile, proportion, fill = answered)) + 
+  geom_col(position = "dodge") +
+  labs(title = "Proportion of answered by mobile")
+
+```
+
+The proportion plot looks very different! But the information is really the same. The scaling is different because the height of the bars in the proportion plot is relative to the category. This makes it easier to interpret. People with mobile phones answer calls from sales reps more often than people without mobile phones. Answerers are in the majority in each case, but much more so for mobile phone users.
+
+## Module 4 Project
+
+What do you need to be able to do?
+
+a.  Understand model accuracy. Why is it a performance metric for classification and not regression? You should be able to explain it.
+
+b.  Calculate accuracy for a simple majority class model.
+
+c.  Fit a tree model of the target with just one predictor variable and calculate the accuracy of this model.
+
+d.  Be able to explain why the tree algorithm chooses a particular split.
+
+e.  Fit a tree model of the target using all the predictors, then: create a visualization of the tree and identify the top 3 most important predictors in this model.
+
+f.  Be able to compare models (including the majority class classifier) using accuracy.
+
+g.  Answer: How will you use a classification model as part of a solution to the AdviseInvest case?
+
+We will use the MegaTelCo data for this demonstration.
+
+```{r}
+# Load and clean data. This is based on the code provided in the previous webinar.
+
+m <- read_csv("megatelco.csv") # Load the data into memory
+
+m_clean <- m |> 
+  mutate(reported_satisfaction = factor(reported_satisfaction), # Creating factors is important for a tree model
+         reported_usage_level = factor(reported_usage_level), # We allow R to choose default factor levels
+         considering_change_of_plan = factor(considering_change_of_plan),
+         leave = factor(leave), 
+         college = ifelse(college=="one", "yes", "no"),
+         college = factor(college)) |> 
+  filter(income > 0, # Clean the data.  This cleaning is identical to what we did in the last webinar
+         house > 0,
+         handset_price < 1000) |> 
+  select(-id)  # Remove ID because it is not relevant as a predictor
+ 
+
+# Check whether the operation was successful
+summary(m_clean)
+
+```
+
+### Calculate accuracy for the majority class classifier
+
+A simple model would be to predict the majority class. Example: Suppose that 60% of the people who started the 2019-23 SLC marathons finished. If we had to predict---yes or no--- whether runner A will finish the 2024 marathon (without knowing anything else about this runner) our prediction would be yes. Why? Historically the majority have finished. Ditto for customer churn. Will a customer churn? Predict the majority class. This is the naive model.
+
+What would the accuracy be for this simple majority class model? If we always predicted `STAY` we would be right this proportion of guesses:
+
+```{r}
+# Use the numbers from the above summary:
+
+2526 / (2471 + 2526)
+ 
+```
+
+This is the *accuracy* of the majority class model. We would be correct approximately 51% of the time. This is an important performance benchmark. Whatever later model we develop should have better accuracy.
+
+Accuracy is defined as: *the proportion of correctly predicted labels*. It is a commonly used error metric for evaluating classifier performance.
+
+### Fit a tree model
+
+Use just one variable, `income`. We'll call this the "money tree." What is the accuracy of the money tree?
+
+```{r}
+# Needs rpart library! Make sure you have run:
+library(rpart)
+
+# Now fit the model:
+money_tree <- rpart(formula = leave ~ income, data = m_clean)
+
+# The formula, y ~ x, means "y explained by x." Here we want to explain churn with customer income.
+# This is a common syntax for defining a model in R. 
+
+# Display the model:
+money_tree
+
+```
+
+Okay, this is confusing! How do we interpret this output? Notice that there is a legend at the top. Let's examine the second line of the tree, 2), using the legend:
+
+-   `node)`: 2).
+-   `split`: >= 99993. This means that the customer population was split into those who make >= to 99993 and those who make < 99993. Those who wound up in the second node make >= to 9993.
+-   `n`: The number of customers who wound up in this node after the split. Notice that 1691 + 3303 = 4994, which was listed as n for the root node.
+-   `loss`. The number of customers who would be misclassified if the majority class was used as the prediction for the node. Here 691 customers would be misclassified.
+-   `yval`: The predicted class. Remember that the predicted class in a classification tree is always the majority class, which in this node is LEAVE.
+-   `(yprob)`: Because STAY is the second factor level (assigned automatically because in the alphabet the L in LEAVE comes before S in STAY). These are the proportions of LEAVE and STAY, respectively. In this node there are 59% leavers and 41% stayers.
+-   `*`: The asterisk indicates that these are terminal nodes---there are no further splits.
+
+Plot the money tree.
+
+```{r}
+# Needs rpart.plot library! Make sure you have run:
+# library(rpart.plot)
+
+# Plot the tree:
+rpart.plot(x = money_tree) # Note: x is a model object created by rpart().
+
+```
+
+How do we read this plot? Keep in mind that different plotting software will have different ways of representing the information.
+
+Let's start at the top, with the root node. Each node contains three pieces of information:
+
+1.  The majority class in the node, which in the case of the entire data set is STAY.
+
+2.  The proportion of STAY in the node. Why STAY? Because of the structure of the factor variable: it has two levels LEAVE and STAY, and the factors levels are set alphabetically by default. The software automatically uses the second level, STAY.
+
+3.  The percentage of data in the node after the split (if any). Here, because we are dealing with the entire data set, it is 100%.
+
+Take the node on the right as another example. The first (and only) split in the tree is on 100k (rounding up from the actual number of 99993). The right split says "no," which means that it contains customers who make less than 100k.
+
+1.  The majority class label in this node is STAY.
+2.  The proportion of STAY in the node is .56.
+3.  66% of the data wound up in this node after the split.
+
+What is the accuracy of the money_tree? Use these steps to calculate accuracy.
+
+1.  Get predictions. Use `predict()` with the `type` argument set to "class." The syntax is: `predict(model, type = "class")`. This will return predicted class labels.
+
+```{r}
+# Get class label predictions
+predict(object = money_tree, 
+        type = "class") 
+
+# The point of this code chunk is to show how predict() works.
+
+```
+
+2.  Create a logical vector resulting from the comparison of model predictions to the observed outcomes for each row. If the prediction is the same as the observed, then the result will be TRUE; if it is not the same, the result will be FALSE. This vector will show whether the model correctly predicted the outcome for each row.
+
+```{r}
+# Create a logical vector
+predict(object = money_tree, type = "class")==m_clean$leave 
+
+# The point of this is to show how the code works in this step.
+
+```
+
+3.  Take the mean of that vector to calculate the proportion of Ts. This is the model's accuracy, representing the proportion of instances where the model predicted `LEAVE` and was correct and where it predicted `STAY` and was correct.
+
+```{r}
+# Calculate accuracy
+(predict(money_tree, type = "class")== m_clean$leave) |> 
+  mean() #.57
+
+# mean() will calculate the proportion of TRUEs in this vector. 
+```
+
+The money tree model is more accurate than majority class prediction! .51 has increased to .57.
+
+### Visualize tree model.
+
+Fit a tree model of the outcome using all the predictors and visualize the model using `rpart.plot()`. Two arguments to `rpart.plot()` will be useful for creating a legible plot: `tweak` and `roundint`. Use the setting recommended in the quiz.
+
+Based on the plot, what are the most important predictors in this model?
+
+Note: shorthand to add all predictors is: "."
+
+You will get the wrong (different) answer if you have not modeled categorical variables correctly as factors!
+
+Notice that in the module 4 project template there is a code chunk provided for cleaning and preparing the data. Use it!
+
+```{r}
+# Fit a tree model of the outcome using all the predictors
+leafy_tree <- rpart(formula = leave ~ ., 
+                     data = m_clean)
+
+# Visualize the model using rpart.plot()
+rpart.plot(x = leafy_tree, 
+           tweak = 1, 
+           roundint = F) 
+
+# You can play around with different values of tweak for legibility.  Try 1.5, 2, 3, etc.
+```
+
+The splits higher in the tree are those that maximize IG at any given step. Therefore, the variables closest to the root node are the most important for predicting the target variable: house, income and overage.
+
+### Compare models using accuracy
+
+What is the accuracy of the `leafy_tree` model? Is it better than the `money_tree` or better than majority class prediction?
+
+```{r}
+# Calculate accuracy for money_tree
+(predict(object = money_tree, type = "class")== m_clean$leave) |> 
+  mean #.57
+
+# Calculate accuracy for leafy_tree
+(predict(object = leafy_tree, type = "class")== m_clean$leave) |> 
+  mean #.71
+
+```
+
+Yes, both models are better than the majority class classifier. The leafy tree model is the best.
