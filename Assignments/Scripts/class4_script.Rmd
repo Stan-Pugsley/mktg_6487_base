@@ -41,14 +41,14 @@ Cleaning/preparing the data:
 - Make 4 non-binary categorical variables into factors.
 
 ```{r}  
-a_clean <- a %>%                         # Notice I am saving the clean data in a new object!
+a_clean <- a |>                         # Notice I am saving the clean data in a new object!
   mutate(job = factor(job),
          product = factor(product),      # Allow R to assign default factor levels
          sav_acct = factor(sav_acct),
-         chk_acct = factor(chk_acct)) %>% 
+         chk_acct = factor(chk_acct)) |> 
   filter(income > 0,                     # Filter out rows with mistaken values
-         num_accts < 5) %>% 
-  na.omit                                # filter out rows with missing values
+         num_accts < 5) |> 
+  na.omit()                                # filter out rows with missing values
 
 ```
 
@@ -66,7 +66,7 @@ mean(a_clean$answered)
 Recode the variable "answered" which is coded 0/1.  Turn 1 into  "yes" and  0 into "no," then turn it into a factor. (This is worth doing because not all audiences will know what a 0 vs. a 1 means for "answered.")  Hint:  use ifelse(), which is very similar to the Excel function if().  The syntax is:  ifelse(test, x, y). In English:  if test is TRUE, then return x, otherwise return y.
 
 ```{r}
-a_clean2 <- a_clean %>%               
+a_clean2 <- a_clean |>               
          mutate(answered = factor(answered))
 summary(a_clean2)
 ```
@@ -77,7 +77,7 @@ Plot "answered" against "num_accts." Take care to choose the appropriate plot ty
 Boxplot! A boxplot is the default choice for plotting a categorical variable against a continuous variable. Here it makes sense to treat checking account as a continuous variable since it is a *count* of the number of customer checking accounts. 
 
 ```{r}
-a_clean2 %>%                                  # Notice I am not saving the plot
+a_clean2 |>                                  # Notice I am not saving the plot
   ggplot(aes(x = answered, y = num_accts)) + 
   geom_boxplot() +
   labs(title = "answered ~ num_accts")
@@ -88,8 +88,8 @@ Interpretation: people who answered tend to have more accounts than people who d
 We could do a little bit more analysis:
 
 ```{r}
-a_clean2 %>% 
-  group_by(answered) %>% 
+a_clean2 |> 
+  group_by(answered) |> 
   summarize(avg_accts = mean(num_accts),
             median_accts = median(num_accts)) 
 ```
@@ -101,9 +101,9 @@ Plot "answered" against "mobile."
 Counts: 
 
 ```{r}
-a_clean2 %>%                               # I'm not saving the plot here
-  mutate(mobile = factor(mobile)) %>%
-  count(mobile, answered) %>%
+a_clean2 |>                               # I'm not saving the plot here
+  mutate(mobile = factor(mobile)) |>
+  count(mobile, answered) |>
   ggplot(aes(mobile, n, fill = answered)) + 
   geom_col(position = "dodge") +
   labs(title = "Count of answered by mobile")
@@ -119,11 +119,11 @@ print(a)
 Proportions:
 
 ```{r}
-a_clean2 %>%
-  mutate(mobile = factor(mobile)) %>%
-  count(mobile, answered) %>%
-  group_by(mobile) %>% 
-  mutate(proportion = n/sum(n)) %>% 
+a_clean2 |>
+  mutate(mobile = factor(mobile)) |>
+  count(mobile, answered) |>
+  group_by(mobile) |> 
+  mutate(proportion = n/sum(n)) |> 
   ggplot(aes(mobile, proportion, fill = answered)) + 
   geom_col(position = "dodge") +
   labs(title = "Proportion of answered by mobile")
@@ -155,20 +155,20 @@ We will use the MegaTelCo data for this demonstration.
 ```{r}
 # Load and clean data
 
-m <- read_csv(file = "megatelco_v5.0.csv")
+m <- read_csv(file = "megatelco.csv")
 
-m_clean <- m %>% 
+m_clean <- m |> 
   mutate(reported_satisfaction = factor(reported_satisfaction),
          reported_usage_level = factor(reported_usage_level),
          considering_change_of_plan = factor(considering_change_of_plan),
          leave = factor(leave), 
          college = ifelse(college=="one", "yes", "no"),
-         college = factor(college)) %>% 
+         college = factor(college)) |> 
   filter(income > 0,
          house > 0,
-         handset_price < 1500) %>% 
-  select(-id) %>% # Remove ID because it is not relevant as a predictor
-  na.omit 
+         handset_price < 1500) |> 
+  select(-id) |> # Remove ID because it is not relevant as a predictor
+  na.omit ()
 
 # Check whether the operation was successful
 summary(m_clean)
@@ -185,8 +185,8 @@ What is the proportion of people who churned?
 7470 / (7470 + 7521)
  
 # Other methods
-ifelse(m_clean$leave == "LEAVE", 1, 0) %>% 
-  mean
+ifelse(m_clean$leave == "LEAVE", 1, 0) |> 
+  mean()
 
 mean(m_clean$leave=="LEAVE")
 
@@ -240,8 +240,8 @@ What is the accuracy of the money_tree? Use these steps to calculate accuracy.
 
 ```{r}
 predict(money_tree, 
-        type = "class") %>% 
-  head 
+        type = "class") |> 
+  head ()
 
 # The point of this code chunk is to show how predict() works.
 # We are using head() to avoid printing all observations to screen
@@ -251,8 +251,8 @@ predict(money_tree,
 2. Create a vector comparing model predictions to the observed outcomes for each row. If the prediction is the same as the observed, then the result will be TRUE; if it is not the same, the result will be FALSE.  This vector will show whether the model correctly predicted the outcome for each row.
 
 ```{r}
-(predict(money_tree, type = "class")==m_clean$leave) %>% 
-  head 
+(predict(money_tree, type = "class")==m_clean$leave) |> 
+  head ()
 
 # The point of this is to show how the code works in this step.
 # We are using head() to avoid printing all observations to screen
@@ -262,8 +262,8 @@ predict(money_tree,
 3. Take the mean of that vector to calculate the proportion of Ts.  This is the model's accuracy.
 
 ```{r}
-(predict(money_tree, type = "class")== m_clean$leave) %>% 
-  mean #.57
+(predict(money_tree, type = "class")== m_clean$leave) |> 
+  mean () #.57
 
 # mean() will calculate the proportion of TRUEs in this vector. 
 ```
@@ -345,11 +345,11 @@ The splits higher in the tree are those that maximize IG at any given step. Ther
 What is the accuracy of the leafy_tree model? Is it better than the money_tree or better than majority class prediction? 
 
 ```{r}
-(predict(money_tree, type = "class")== m_clean$leave) %>% 
-  mean #.57
+(predict(money_tree, type = "class")== m_clean$leave) |> 
+  mean () #.57
 
-(predict(leafy_tree, type = "class")== m_clean$leave) %>% 
-  mean #.71
+(predict(leafy_tree, type = "class")== m_clean$leave) |> 
+  mean () #.71
 ```
 
 Yes, both models are better than the majority class classifier.  The leafy tree model is the best.

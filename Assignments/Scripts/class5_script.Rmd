@@ -41,11 +41,11 @@ Solution:
 Here is the data prep code chunk that is included in the template.  Use this exactly! The same code will also be available in the template for the Module 5 project.
 
 ```{r, }
-advise_invest <- read_csv("adviseinvest.csv")  %>%            # Download data
-  select(-product) %>%                                        # Remove the product column
-  na.omit %>%                                                 # Remove NAs
+advise_invest <- read_csv("adviseinvest.csv")  |>            # Download data
+  select(-product) |>                                        # Remove the product column
+  na.omit() |>                                                 # Remove NAs
   filter(income > 0,                                          # Filter out mistaken data
-         num_accts < 5) %>% 
+         num_accts < 5) |> 
   mutate(answered = factor(ifelse(answered==0, "no","yes"),   # Turn answered into yes/no factor
                            levels  = c("no", "yes")),
          female = factor(female),                             # Make categorical variables into factors
@@ -117,8 +117,8 @@ The top three predictors of answering in this model are: number of checking acco
 Here is how to use this model to predict a class label for each customer:
 
 ```{r}
-predict(tree_model, type = "class") %>% 
-  head
+predict(tree_model, type = "class") |> 
+  head()
 ```
 This means that the model predicts customer 1 will answer, customer 2 will answer, etc. The `predict()` function simply runs each customer through the classification tree to find out which terminal node they wind up in.
 
@@ -126,8 +126,8 @@ The argument `type = "class"` mean that the `predict()` function will predict a 
 
 
 ```{r}
-predict(tree_model, type = "prob") %>% 
-  head
+predict(tree_model, type = "prob") |> 
+  head()
 ```
 
 This may sound complicated, but all the probability represents is the proportion of each class in the terminal node in which that customer wound up. So, for example, the first customer wound up in a terminal node that was 88% "yes."  The majority class in that case would be "yes," but you can see how a probability provides more information than simply a binary class label. 
@@ -142,8 +142,8 @@ predict(tree_model, type = "class") == advise_invest$answered
 This produces TRUEs and FALSEs, as you can see.  `mean()` will calculate the proportion of TRUEs.
 
 ```{r}
-(predict(tree_model, type = "class") == advise_invest$answered) %>% 
-  mean
+(predict(tree_model, type = "class") == advise_invest$answered) |> 
+  mean()
 
 ```
 
@@ -159,16 +159,16 @@ What do you need to know for this module's project?
 6.  Use the model to predict on a new dataset (without the target), then use these predictions to identify those who should be called--a contact list.
 7.  Make a recommendation to the Director of Sales based on your analytic work.
 
-Note:  For the module 5 project you will predict answering for prospective customers (who have not yet been called). Consequently, the assignment requires an additional dataset, customer_data.csv, that you will need to download and move into your project folder.  Here is code to load that data into memory after you have it saved in your project folder (your working directory). This code is included in the template script.
+Note:  For the module 5 project you will predict answering for prospective customers (who have not yet been called). Consequently, the assignment requires an additional dataset, adviseinvest_new_customer.csv, that you will need to download and move into your project folder.  Here is code to load that data into memory after you have it saved in your project folder (your working directory). This code is included in the template script.
 
 We will again use the MegaTelCo data for this demonstration.
 
 ```{r}
 # Load and clean data--recycle code from last project demo
 
-m <- read_csv(file = "megatelco_v5.0.csv")
+m <- read_csv(file = "megatelco.csv")
 
-m_clean <- m %>% 
+m_clean <- m |> 
   mutate(reported_satisfaction = factor(reported_satisfaction,
                                         levels = c("low","avg", "high"),
                                         ordered = T),
@@ -179,12 +179,12 @@ m_clean <- m %>%
                                              levels = c("no", "maybe", "yes")),
          leave = factor(leave), # let the levels be assigned alphabetically
          college = ifelse(college=="one", "yes", "no"),
-         college = factor(college)) %>% 
+         college = factor(college)) |> 
   filter(income > 0,
          house > 0,
-         handset_price < 1500) %>% 
-  select(-id) %>% 
-  na.omit 
+         handset_price < 1500) |> 
+  select(-id) |> 
+  na.omit()
 
 # Check whether the operation was successful
 summary(m_clean)
@@ -237,7 +237,7 @@ How much profit (revenue - costs) could be expected if all customers got the mar
 
 ```{r}
 
-m_clean %>% 
+m_clean |> 
   count(leave)
 
 ```
@@ -260,16 +260,16 @@ Here are the steps involved in doing that analysis:
 
 ```{r}
 
-predict(classification_tree, type = "prob") %>% 
-  head
+predict(classification_tree, type = "prob") |> 
+  head()
 
 ```
 
 Pick out just the first column using square bracket notation: [row, column]. This is an alternative to dollar sign notation.  [ , column] is the same as $column.
 
 ```{r}
-predict(classification_tree, type = "prob")[ ,1] %>%  # picks out the first column
-  head
+predict(classification_tree, type = "prob")[ ,1] |>  # picks out the first column
+  head()
 ```
 
 2. Convert probabilities to a class label at a given decision threshold.
@@ -310,12 +310,12 @@ We will create a fake new dataset based on the original, just for illustration, 
 ```{r}
 # For illustration, create new dataset, take out target, and add fake id.  As noted above,
 # this is not part of the module 5 project!! For the project this data is already supplied for you
-# in customer_data.csv.
+# in adviseinvest_new_customer.csv.
 
 set.seed(123) # The seed guarantees we get exactly the same dataset after random;y subsetting
-new_customers <- m_clean %>% 
-  sample_n(1000) %>% 
-  select(-leave) %>%  
+new_customers <- m_clean |> 
+  sample_n(1000) |> 
+  select(-leave) |>  
   mutate(id = sample(1:1000, 1000, replace = F))
 
 glimpse(new_customers)
@@ -328,20 +328,20 @@ Get predictions for current customers:
 # generate predictions
 predict(object = classification_tree, 
         newdata = new_customers, 
-        type = "prob")[ ,1] %>% 
-  head
+        type = "prob")[ ,1] |> 
+  head()
 ```
 
 Add prediction to the dataset and filter for probability >= .2. Select just id and prob for a contact list.
 
 ```{r}
 
-contact_list <- new_customers %>% 
+contact_list <- new_customers |> 
   mutate(prob_churn = predict(classification_tree, 
                               newdata = new_customers, 
-                              type = "prob")[,1]) %>% 
-  filter(prob_churn >= .2) %>% 
-  select(id, prob_churn) %>% 
+                              type = "prob")[,1]) |> 
+  filter(prob_churn >= .2) |> 
+  select(id, prob_churn) |> 
   arrange(desc(prob_churn))
 
 contact_list

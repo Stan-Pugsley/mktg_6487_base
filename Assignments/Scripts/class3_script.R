@@ -65,7 +65,7 @@ library(tidyverse) # Remember: must always load packages at the beginning of a s
 ### Import data 
 ########################################### 
 
-m <- read_csv(file = "megatelco_v5.0.csv")
+m <- read_csv(file = "megatelco.csv")
 
 ########################################### 
 ### Inspect
@@ -101,14 +101,14 @@ summary(m)
 # 2. factor(). The default setting is to create alphabetic factor levels for character variables.
 # 3. ifelse() is a handy function for recoding, identical to Excel's "if" function.
 
-m_clean <- m %>% # create a new named dataset for clarity
+m_clean <- m |> # create a new named dataset for clarity
   mutate(leave = factor(leave), # let the levels be assigned alphabetically
          college = ifelse(college=="one", "yes", "no"),
-         college = factor(college)) %>% 
+         college = factor(college)) |> 
   filter(income > 0,
          house > 0,
-         handset_price < 1500) %>% 
-  na.omit # This is a quick way of removing all the NAs in a data set.
+         handset_price < 1500) |> 
+  na.omit () # This is a quick way of removing all the NAs in a data set.
 
 # Check whether the operation was successful
 summary(m_clean)
@@ -131,7 +131,7 @@ mean(example1) # Here the mean is the proportion of 1s
 # Example using ifelse() with a factor variable.
 # Note: we will pick out columns using the "$" notation.
 
-ifelse(m_clean$leave=="LEAVE", 1, 0) %>% 
+ifelse(m_clean$leave=="LEAVE", 1, 0) |> 
   mean()
 
 #################################################
@@ -153,9 +153,9 @@ ggplot(m_clean, aes(leave, house)) +
   geom_point() + 
   labs(title = "leave ~ house")
 
-m_clean %>% 
-  group_by(leave) %>% 
-  summarize(avg_house_price = mean(house)) %>% # do some data manipulation and pipe to viz
+m_clean |> 
+  group_by(leave) |> 
+  summarize(avg_house_price = mean(house)) |> # do some data manipulation and pipe to viz
   ggplot(aes(leave, avg_house_price)) +
   geom_col() +
   labs(title = "leave ~ house")
@@ -178,7 +178,7 @@ median(m_clean$house)
 # Both variables are categorical. 
 
 # First, what does NOT work:
-m_clean %>% 
+m_clean |> 
   ggplot(aes(x = leave, y = college)) +
   geom_boxplot() +
   labs(title = "leave ~ college")
@@ -191,7 +191,7 @@ m_clean %>%
 # to, college.
 
 # 1. Create a summary table of counts:
-m_clean %>% 
+m_clean |> 
   count(leave, college) 
 
 # Notice that I'm not saving this table but  printing it to the console.
@@ -200,8 +200,8 @@ m_clean %>%
 # each unique combination of leave and college
 
 # 2. Pipe new table into ggplot for viz
-m_clean %>% 
-  count(leave, college) %>% 
+m_clean |> 
+  count(leave, college) |> 
   ggplot(aes(x = college, y = n, fill = leave)) +
   geom_col() +
   labs(title = "counts of leave by college")
@@ -210,8 +210,8 @@ m_clean %>%
 
 # Let's "dodge" the bars.
 
-m_clean %>% 
-  count(leave, college) %>% 
+m_clean |> 
+  count(leave, college) |> 
   ggplot(aes(x = college, y = n, fill = leave)) +
   geom_col(position = "dodge") +
   labs(title = "counts of leave by college")
@@ -227,20 +227,20 @@ m_clean %>%
 # the stout-hearted!
 
 # Base table
-m_clean %>% 
+m_clean |> 
   count(college, leave) 
 
 # Add proportion to the table
-m_clean %>% 
-  count(college, leave) %>% 
-  group_by(college) %>% 
+m_clean |> 
+  count(college, leave) |> 
+  group_by(college) |> 
   mutate(proportion = n / sum(n))
 
 # Pipe this table into ggplot using geom_col with dodged bars.
-m_clean %>% 
-  count(college, leave) %>% 
-  group_by(college) %>% 
-  mutate(proportion = n / sum(n)) %>% 
+m_clean |> 
+  count(college, leave) |> 
+  group_by(college) |> 
+  mutate(proportion = n / sum(n)) |> 
   ggplot(aes(college, proportion, fill = leave)) + 
   geom_col(position = "dodge") +
   labs(title = "Proportion of leave by college") 

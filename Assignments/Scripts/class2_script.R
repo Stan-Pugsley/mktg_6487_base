@@ -60,7 +60,7 @@ summary(mtcars) # get a numerical summary of the dataset
 #    directory in the folder you created with your project.
 # 3. Save the data as an R object, stored in memory, so it is available for use.
 
-m <- read_csv(file = "megatelco_v5.0.csv")
+m <- read_csv(file = "megatelco.csv")
 
 
 ?read_csv
@@ -87,27 +87,27 @@ glimpse(m) # Handy tidyverse function
 # Are there any variables that would definitely NOT be used in a model?
 
 # Quick cleaning using dplyr:
-m_clean <- m %>% 
+m_clean <- m |> 
   filter(income > 0, 
          house > 0,
          handset_price < 1500)
 
 # Explanation of code. 
 # 1. m_clean <- m:  create a cleaned dataset from the initial downloaded dataset.
-# 2. %>%:  the pipe.  This makes it easy to read the code. Read it as: "and then."
+# 2. |>:  the pipe.  This makes it easy to read the code. Read it as: "and then."
 # 3. filter():  The logical conditions for removing rows. Read as: "keep rows where
 #    income > 0 and house > 0 and handset_price < 1000."
 
 # Summary table.  
 # What is average house price at the two levels of leave?
 
-m_clean %>% 
-  group_by(leave) %>% 
+m_clean |> 
+  group_by(leave) |> 
   summarize(avg_house_price = mean(house))
 
 # Explanation of code. 
 # 1. m_clean:  I'm not saving this table a new object, just printing it to the screen for convenience.
-# 2. %>%:  the pipe.  
+# 2. |>:  the pipe.  
 # 3. group_by():  Defines the grouping variable. Indicates that the summary statistic 
 #    should be produced for each level of the categorical leave variable.
 # 3. summarize():  Creates the summary table, which is smaller than the original table, 
