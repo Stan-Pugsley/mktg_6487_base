@@ -26,18 +26,6 @@
 #    upper left.
 # 7. Submit the knitted document at Canvas (browse for the document in your working directory).
 
-###########################################  
-### Open the quiz 
-########################################### 
-
-# Go to Canvas and open the quiz for the project and look at the questions.
-
-########################################### 
-### Download data from Canvas for this webinar
-########################################### 
-
-# 1. Go to Canvas and download the megatelco.csv file for this example.  
-# 2. Move it to the folder you created with your project (your working directory). 
 
 ########################################### 
 ### Needed skills for the project 

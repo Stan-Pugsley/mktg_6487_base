@@ -40,19 +40,6 @@ library(tidyverse)
 ### Getting data into R
 ########################################### 
 
-# Data that is built in:
-data("mtcars")
-
-# Inspect
-?mtcars # get info on the dataset
-
-head(mtcars, n = 10) # look at the top 6 (by default) rows
-tail(mtcars)
-
-summary(mtcars) # get a numerical summary of the dataset
-
-# Click on the spreadsheet icon next to the mtcars object in memory
-# for an Excel-like view of the data
 
 # Data from an external source.
 # 1. Go to canvas and find megatelco.csv in Files.  Download it.
@@ -125,12 +112,6 @@ m_clean |>
 
 # Then add plot type:
 
-# 1. histogram: geom_histogram(). Distribution of single continuous variable.
-
-# 2. scatterplot: geom_point(). Relationship between 2 continuous variables.
-
-# 3. boxplot: geom_boxplot(). Relationship between continuous and categorical 
-#   variables.
 
 # Histogram
 ggplot(data = m_clean, aes(x = house)) +

@@ -10,127 +10,6 @@ library(rpart)  # Install this:  install.packages("rpart")
 library(rpart.plot) # Install this:  install.packages("rpart.plot")
 ```
 
-## Agenda
-
-1. Review the last project assignment. Remember that it is fine to turn these assignments in late (there is a small penalty). The final deadline is the start of the next module's class. 
-
-2. Prepare for this module's modeling project.  
-
-## Review Module 3 Project 
-
-### Download data
-
-```{r}
-a <- read.csv("adviseinvest.csv")
-
-glimpse(a)
-
-```
-
-Variables that represent *categories* (even if coded numerically) should be coded as factors. 
-
-Variables that represent *counts* can be left as integers (or numeric data type). In some circumstances you might choose to represent a count as a factor, but in general such variables should be numeric.
-
-### Q3
-
-Cleaning/preparing the data:
-
-- Remove rows with NAs.
-- Remove the row with the single outlier in num_accts.
-- Remove the rows with negative income values.
-- Make 4 non-binary categorical variables into factors.
-
-```{r}  
-a_clean <- a |>                         # Notice I am saving the clean data in a new object!
-  mutate(job = factor(job),
-         product = factor(product),      # Allow R to assign default factor levels
-         sav_acct = factor(sav_acct),
-         chk_acct = factor(chk_acct)) |> 
-  filter(income > 0,                     # Filter out rows with mistaken values
-         num_accts < 5) |> 
-  na.omit()                                # filter out rows with missing values
-
-```
-
-Calculate and report the mean of "answered" after cleaning the dataset.  Because "answered" is coded 0/1 this is as simple as calculating the proportion of 1s in that vector with mean().
-
-```{r}
-
-mean(a_clean$answered)  
-
-```
-
-
-## Q4
-
-Recode the variable "answered" which is coded 0/1.  Turn 1 into  "yes" and  0 into "no," then turn it into a factor. (This is worth doing because not all audiences will know what a 0 vs. a 1 means for "answered.")  Hint:  use ifelse(), which is very similar to the Excel function if().  The syntax is:  ifelse(test, x, y). In English:  if test is TRUE, then return x, otherwise return y.
-
-```{r}
-a_clean2 <- a_clean |>               
-         mutate(answered = factor(answered))
-summary(a_clean2)
-```
-
-
-Plot "answered" against "num_accts." Take care to choose the appropriate plot type for showing the relationship between a categorical and a numeric or count variable.  Which plot type would be appropriate: histogram? scatterplot? boxplot? line plot? barplot?
-
-Boxplot! A boxplot is the default choice for plotting a categorical variable against a continuous variable. Here it makes sense to treat checking account as a continuous variable since it is a *count* of the number of customer checking accounts. 
-
-```{r}
-a_clean2 |>                                  # Notice I am not saving the plot
-  ggplot(aes(x = answered, y = num_accts)) + 
-  geom_boxplot() +
-  labs(title = "answered ~ num_accts")
-```
-
-Interpretation: people who answered tend to have more accounts than people who did not answer. 
-
-We could do a little bit more analysis:
-
-```{r}
-a_clean2 |> 
-  group_by(answered) |> 
-  summarize(avg_accts = mean(num_accts),
-            median_accts = median(num_accts)) 
-```
-
-### Q5
-  
-Plot "answered" against "mobile." 
-
-Counts: 
-
-```{r}
-a_clean2 |>                               # I'm not saving the plot here
-  mutate(mobile = factor(mobile)) |>
-  count(mobile, answered) |>
-  ggplot(aes(mobile, n, fill = answered)) + 
-  geom_col(position = "dodge") +
-  labs(title = "Count of answered by mobile")
-
-
-a=5
-b=factor(a)
-print(a)
-
-
-```
-
-Proportions:
-
-```{r}
-a_clean2 |>
-  mutate(mobile = factor(mobile)) |>
-  count(mobile, answered) |>
-  group_by(mobile) |> 
-  mutate(proportion = n/sum(n)) |> 
-  ggplot(aes(mobile, proportion, fill = answered)) + 
-  geom_col(position = "dodge") +
-  labs(title = "Proportion of answered by mobile")
-
-```
-
-The proportion plot looks very different! But the information is really the same. The scaling is different because the height of the bars in the proportion plot is relative to the category. This makes it easier to interpret. People with mobile phones answer the calls more often than people without mobile phones. Answerers are in the majority in each case, but much more so for mobile phone users.
 
 ## Module 4 Project 
 
@@ -234,6 +113,22 @@ rpart.plot(x = money_tree)
 
 ```
 
+How do we read this plot? Keep in mind that different plotting software will have different ways of representing the information.
+
+Let's start at the top, with the root node. Each node contains three pieces of information:
+
+1.  The majority class in the node, which in the case of the entire data set is STAY.
+
+2.  The proportion of STAY in the node. Why STAY? Because of the structure of the factor variable: it has two levels LEAVE and STAY, and the factors levels are set alphabetically by default. The software automatically uses the second level, STAY.
+
+3.  The percentage of data in the node after the split (if any). Here, because we are dealing with the entire data set, it is 100%.
+
+Take the node on the right as another example. The first (and only) split in the tree is on 100k (rounding up from the actual number of 99993). The right split says "no," which means that it contains customers who make less than 100k.
+
+1.  The majority class label in this node is STAY.
+2.  The proportion of STAY in the node is .56.
+3.  66% of the data wound up in this node after the split.
+
 What is the accuracy of the money_tree? Use these steps to calculate accuracy.
 
 1.  Get predictions. Use `predict()` with the `type` argument set to "class." The syntax is: `predict(model, type = "class")`. This will return predicted class labels. 
@@ -269,49 +164,6 @@ predict(money_tree,
 ```
 
 The money tree model is more accurate than majority class prediction! .51 has increased to .57.
-
-### Calculate information gain (IG)
-
-IG is a metric telling you how much more homogeneous the groups in a dataset are after splitting a parent into two children. IG relies on the concept of entropy.  These are the quantities we need to compute:
-
-- entropy(parent): entropy in the parent, prior to the split.
-- entropy(c1): entropy in the first child.
-- p(c1): the proportion of observations from the parent that wind up in the first child after the split.
-- entropy(c2): entropy in the second child.
-- p(c2): the proportion of observations from the parent that wind up in the second child after the split.
-
-The formula is:
-
-IG = entropy(parent) - [p(c1) * entropy(c1) + p(c2) * entropy(c2)]
-
-Recall that entropy for any group is defined as:
-
-- p1 * log2(p1) - p2 * log2(p2)
-
-What is the IG associated with  the first split in this tree? 
-
-For this exercise, use log base 2: `log2(x)`.  
-
-```{r}  
-money_tree
-
-# The first node with an asterisk, indicating a terminal node, is node 2, defined as:  2) income>=99993.  
-
-(parent_entropy <- -.49 * log2(.49) - .51 * log2(.51))
-
-(child1_entropy <- -.59 * log2(.59) - .41 * log2(.41))
-
-(child2_entropy <- -.44 * log2(.44) - .56 * log2(.56))
-
-(p_c1 <- 1691/4994)
-
-(p_c2 <- 3303/4994)
-
-# IG = entropy(parent) - [p(c1) * entropy(c1) + p(c2) * entropy(c2)]
-
-parent_entropy - (p_c1 * child1_entropy + p_c2 * child2_entropy)
-
-```
 
 ### Visualize tree model.
 
