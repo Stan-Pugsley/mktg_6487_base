@@ -53,7 +53,8 @@ library(tidyverse) # Remember: must always load packages at the beginning of a s
 ### Import data 
 ########################################### 
 
-m <- read_csv(file = "megatelco.csv")
+m <- read_csv(file = "https://raw.githubusercontent.com/Stan-Pugsley/mktg_6487_base/main/Assignments/DataSets/megatelco.csv")
+
 
 ########################################### 
 ### Inspect

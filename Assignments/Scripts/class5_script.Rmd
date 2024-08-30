@@ -55,7 +55,7 @@ We will again use the MegaTelCo data for this demonstration.
 ```{r}
 # Load and clean data--recycle code from last project demo
 
-m <- read_csv(file = "megatelco.csv")
+m <- read_csv(file = "https://raw.githubusercontent.com/Stan-Pugsley/mktg_6487_base/main/Assignments/DataSets/megatelco.csv")
 
 m_clean <- m |> 
   mutate(reported_satisfaction = factor(reported_satisfaction,

@@ -47,7 +47,10 @@ library(tidyverse)
 #    directory in the folder you created with your project.
 # 3. Save the data as an R object, stored in memory, so it is available for use.
 
-m <- read_csv(file = "megatelco.csv")
+m <- read_csv(file = "https://raw.githubusercontent.com/Stan-Pugsley/mktg_6487_base/main/Assignments/DataSets/megatelco.csv")
+
+#Alternate method:
+# m <- read_csv(file.choose())
 
 
 ?read_csv
@@ -55,7 +58,7 @@ m$college
 
 # Here is another option: use the file.choose() function
 
-m <- read_csv(file.choose())
+
 
 # Another option:  Use the "Import Dataset" under the Environment tab in the upper right quadrant.
 
