@@ -8,6 +8,36 @@
 
 # Plan to do your project coding using the provided RMarkdown template.
 
+########################################### 
+# Megatelco Data Dictionary
+########################################### 
+
+# DEMOGRAPHIC VARIABLES:
+# College - has the customer attended some college (one, zero)
+# Income - annual income of customer
+# House - estimated price of the customer's home (if applicable)
+
+# USAGE VARIABLES:
+# Data Overage Mb - Average number of megabytes that the customer used in excess of the plan limit (over last 12 months)
+# Data Leftover Mb - Average number of megabytes that the customer use was below the plan limit (over last 12 months)
+# Data Mb Used - Average number of megabytes used per month (over last 12 months)
+# Text Message Count - Average number of texts per month (over last 12 months)
+# Over 15 Minute Calls Per Month - Average number of calls over 15 minutes in duration per month (over last 12 months)
+# Average Call Duration- Average call duration (over last 12 months)
+
+#PHONE VARIABLES:
+# Operating System - Current operating system of phone
+# Handset Price - Retail price of the phone used by the customer
+
+#ATTITUDINAL VARIABLES:
+# Reported Satisfaction - Survey response to "How satisfied are you with your current phone plan?" (high, med, low)
+# Reported Usage Level - Survey response to "How much do your use your phone?" (high, med, low)
+# Considering Change of Plan - Survey response to "Are you currently planning to change companies when your contract expires?" (high, med, low)
+
+#OTHER VARIABLES
+# Leave - Did this customer churn with the last contract expiration? (LEAVE, STAY)
+# ID - Customer identifier
+
 ###########################################  
 ### Complete this module's RMarkdown assignment
 ########################################### 
