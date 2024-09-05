@@ -1,4 +1,4 @@
-college,income,data_overage_mb,data_leftover_mb,data_mb_used,text_message_count,house,handset_price,over_15mins_calls_per_month,average_call_duration,reported_satisfaction,reported_usage_level,considering_change_of_plan,leave,id,Operating system
+college,income,data_overage_mb,data_leftover_mb,data_mb_used,text_message_count,house,handset_price,over_15mins_calls_per_month,average_call_duration,reported_satisfaction,reported_usage_level,considering_change_of_plan,leave,id,operating_system
 one,403137,70,0,6605,199,841317,653,5,8,low,low,yes,LEAVE,8183,Android
 zero,129700,67,16,6028,134,476664,1193,5,5,low,low,yes,LEAVE,12501,IOS
 zero,69741,60,0,1482,176,810225,1037,3,8,low,low,yes,STAY,7425,IOS
@@ -18,7 +18,7 @@ zero,230792,169,0,7653,196,496113,1281,10,14,low,low,maybe,LEAVE,16771,IOS
 one,236152,0,21,3881,189,1364832,745,13,6,high,low,yes,STAY,3335,Android
 one,422168,0,10,794,213,909127,874,1,4,high,low,yes,STAY,80,IOS
 zero,221813,216,0,6803,98,612697,1335,14,9,low,low,no,LEAVE,18537,IOS
-zero,72590,0,34,2142,106,556463,469,0,1,low,low,no,LEAVE,3419,Android
+zero,72590,0,34,2142,106,-463,469,0,1,low,low,no,LEAVE,3419,Android
 zero,260331,70,0,5738,186,1076046,776,3,12,avg,high,yes,STAY,10606,Android
 one,193768,194,56,1485,99,996342,815,18,2,high,high,yes,LEAVE,10141,IOS
 zero,360215,0,6,7409,149,629909,1240,0,5,low,low,no,STAY,11575,IOS
