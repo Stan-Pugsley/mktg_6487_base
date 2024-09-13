@@ -92,7 +92,7 @@ What is the proportion of people who churned?
 ```{r}
 # Could use the numbers from the above summary:
 
-7470 / (7470 + 7521)
+7469 / (7469 + 7521)
  
 # Other methods
 ifelse(m_clean$leave == "LEAVE", 1, 0) |> 
@@ -144,23 +144,9 @@ rpart.plot(x = money_tree)
 
 ```
 
-How do we read this plot? Keep in mind that different plotting software will have different ways of representing the information.
 
-Let's start at the top, with the root node. Each node contains three pieces of information:
 
-1.  The majority class in the node, which in the case of the entire data set is STAY.
-
-2.  The proportion of STAY in the node. Why STAY? Because of the structure of the factor variable: it has two levels LEAVE and STAY, and the factors levels are set alphabetically by default. The software automatically uses the second level, STAY.
-
-3.  The percentage of data in the node after the split (if any). Here, because we are dealing with the entire data set, it is 100%.
-
-Take the node on the right as another example. The first (and only) split in the tree is on 100k (rounding up from the actual number of 99993). The right split says "no," which means that it contains customers who make less than 100k.
-
-1.  The majority class label in this node is STAY.
-2.  The proportion of STAY in the node is .56.
-3.  66% of the data wound up in this node after the split.
-
-What is the accuracy of the money_tree? Use these steps to calculate accuracy.
+What is the accuracy of the money_tree, unsing only one variable? Use these steps to calculate accuracy.
 
 1.  Get predictions. Use `predict()` with the `type` argument set to "class." The syntax is: `predict(model, type = "class")`. This will return predicted class labels. 
 
@@ -189,12 +175,12 @@ predict(money_tree,
 
 ```{r}
 (predict(money_tree, type = "class")== m_clean$leave) |> 
-  mean () #.57
+  mean () 
 
 # mean() will calculate the proportion of TRUEs in this vector. 
 ```
 
-The money tree model is more accurate than majority class prediction! .51 has increased to .57.
+The money tree model is more accurate than majority class prediction! .51 has increased.
 
 ### Visualize tree model.
 
@@ -229,10 +215,10 @@ What is the accuracy of the leafy_tree model? Is it better than the money_tree o
 
 ```{r}
 (predict(money_tree, type = "class")== m_clean$leave) |> 
-  mean () #.57
+  mean () 
 
 (predict(leafy_tree, type = "class")== m_clean$leave) |> 
-  mean () #.71
+  mean () 
 ```
 
 Yes, both models are better than the majority class classifier.  The leafy tree model is the best.
