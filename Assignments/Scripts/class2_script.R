@@ -97,8 +97,9 @@ glimpse(m) # Handy tidyverse function
 # Quick cleaning using dplyr:
 m_clean <- m |> 
   filter(income > 0, 
-         house > 0,
          handset_price < 1500)
+
+#What other cleanup is needed?  What about null values?
 
 # Explanation of code. 
 # 1. m_clean <- m:  create a cleaned dataset from the initial downloaded dataset.

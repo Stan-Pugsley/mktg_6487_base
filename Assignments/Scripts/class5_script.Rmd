@@ -98,10 +98,11 @@ m_clean <- m |>
          college = ifelse(college=="one", "yes", "no"),
          college = factor(college)) |> 
   filter(income > 0,
-         house > 0,
          handset_price < 1500) |> 
   select(-id) |> 
   na.omit()
+
+#What other cleanup is needed?
 
 # Check whether the operation was successful
 summary(m_clean)
@@ -143,7 +144,7 @@ table(predicted = predict(classification_tree, type = "class"),
 ```
 
 ```{r}
-
+#Note: these numbers may have changed
 6999 * (800 - 200) - 4579 * 200
 
 ```
@@ -162,7 +163,7 @@ m_clean |>
 TPs will be the leavers, FPs the stayers.
 
 ```{r}
-
+#Note: these numbers may have changed
 7470 * (800 - 200) - 7521 * 200
 
 ```
@@ -206,10 +207,10 @@ table(predicted = ifelse(predict(classification_tree, type = "prob")[ ,1] >= .2,
 
 ```
 
-4. Calculate profit.
+4. Calculate profit.  
 
 ```{r}
-
+#Note: these numbers may have changed
 7470 * (800 - 200) - 5394 *200
 
 ```

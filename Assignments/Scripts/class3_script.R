@@ -125,9 +125,10 @@ m_clean <- m |> # create a new named dataset for clarity
          college = ifelse(college=="one", "yes", "no"),
          college = factor(college)) |> 
   filter(income > 0,
-         house > 0,
          handset_price < 1500) |> 
   na.omit () # This is a quick way of removing all the NAs in a data set.
+
+#What other cleanup is needed?
 
 # Check whether the operation was successful
 summary(m_clean)

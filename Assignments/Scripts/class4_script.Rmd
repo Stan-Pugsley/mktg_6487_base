@@ -75,10 +75,11 @@ m_clean <- m |>
          college = ifelse(college=="one", "yes", "no"),
          college = factor(college)) |> 
   filter(income > 0,
-         house > 0,
          handset_price < 1500) |> 
   select(-id) |> # Remove ID because it is not relevant as a predictor
   na.omit ()
+
+#Do you see any other cleanup needed?
 
 # Check whether the operation was successful
 summary(m_clean)
@@ -90,7 +91,7 @@ summary(m_clean)
 What is the proportion of people who churned?
 
 ```{r}
-# Could use the numbers from the above summary:
+# Could use the numbers from the above summary (note that these may have changed)
 
 7469 / (7469 + 7521)
  
